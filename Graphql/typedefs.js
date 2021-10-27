@@ -32,4 +32,8 @@ module.exports = gql`
     ): User!
     loginUser(username: String!, password: String!): User!
   }
+
+  type Subscription {
+    messageCreated: Message!
+  }
 `;

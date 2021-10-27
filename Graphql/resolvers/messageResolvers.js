@@ -1,7 +1,8 @@
 const { UserInputError } = require("apollo-server-errors");
 const { Message, User } = require("../../models/index.js");
 const checkAuth = require("../../utils/check-auth");
-const { Op } = require("sequelize");
+const { PubSub, withFilter } = require("graphql-subscriptions");
+const pubsub = new PubSub();
 
 module.exports = {
   Query: {
@@ -83,12 +84,34 @@ module.exports = {
 
         await newMessage.save();
 
+        pubsub.publish("MESSAGE_CREATED", {
+          messageCreated: {
+            ...newMessage.dataValues,
+          },
+        });
+
         return {
           ...newMessage.dataValues,
         };
       } catch (error) {
         throw new Error(error);
       }
+    },
+  },
+  Subscription: {
+    messageCreated: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(["MESSAGE_CREATED"]),
+        ({ messageCreated }, variables, context) => {
+          const userLoggedIn = checkAuth(context).user;
+          if (
+            messageCreated.from === userLoggedIn.username ||
+            messageCreated.to === userLoggedIn.username
+          ) {
+            return true;
+          }
+        }
+      ),
     },
   },
 };
