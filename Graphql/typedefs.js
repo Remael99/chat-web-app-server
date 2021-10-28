@@ -34,6 +34,6 @@ module.exports = gql`
   }
 
   type Subscription {
-    messageCreated: Message!
+    messageCreated(username:String!): Message!
   }
 `;

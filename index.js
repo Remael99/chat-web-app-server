@@ -7,20 +7,13 @@ const resolvers = require("./Graphql/resolvers/index.js");
 const { sequelize } = require("./models");
 const { execute, subscribe } = require("graphql");
 const { SubscriptionServer } = require("subscriptions-transport-ws");
-
-startApolloServer(typeDefs, resolvers);
+const { makeExecutableSchema } = require("@graphql-tools/schema");
 
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
   const httpServer = http.createServer(app);
 
-  const subscriptionServer = new SubscriptionServer.create(
-    { typeDefs, resolvers, execute, subscribe },
-    {
-      server: httpServer,
-      path: "/",
-    }
-  );
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
 
   const server = new ApolloServer({
     typeDefs,
@@ -40,6 +33,21 @@ async function startApolloServer(typeDefs, resolvers) {
     context: (context) => context,
   });
 
+  const subscriptionServer = new SubscriptionServer.create(
+    {
+      execute,
+      subscribe,
+      schema,
+      async onConnect(connectionParams, webSocket, context) {
+        console.log(connectionParams);
+      },
+    },
+    {
+      server: httpServer,
+      path: "/",
+    }
+  );
+
   await server.start();
 
   server.applyMiddleware({
@@ -56,3 +64,5 @@ async function startApolloServer(typeDefs, resolvers) {
 
   console.log(` Server ready at http://localhost:4000${server.graphqlPath}`);
 }
+
+startApolloServer(typeDefs, resolvers);

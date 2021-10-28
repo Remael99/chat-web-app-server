@@ -1,9 +1,12 @@
 const { AuthenticationError } = require("apollo-server");
 const jwt = require("jsonwebtoken");
 const SECRET = require("./config.js");
+const { PubSub } = require("graphql-subscriptions");
+const pubSub = new PubSub();
 
 module.exports = (context) => {
   let token;
+
   if (context.req && context.req.headers.authorization) {
     const authHeader = context.req.headers.authorization;
     token = authHeader.split("Bearer ")[1];
@@ -15,6 +18,7 @@ module.exports = (context) => {
     try {
       const user = jwt.verify(token, SECRET);
       context.user = user;
+      context.pubSub = pubSub;
     } catch (err) {
       throw new AuthenticationError("invalid / expired token");
     }

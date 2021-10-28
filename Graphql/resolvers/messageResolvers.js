@@ -2,7 +2,8 @@ const { UserInputError } = require("apollo-server-errors");
 const { Message, User } = require("../../models/index.js");
 const checkAuth = require("../../utils/check-auth");
 const { PubSub, withFilter } = require("graphql-subscriptions");
-const pubsub = new PubSub();
+
+const pubSub = new PubSub();
 
 module.exports = {
   Query: {
@@ -53,7 +54,6 @@ module.exports = {
     async createMessage(_, { content, to }, context) {
       try {
         const userLoggedIn = checkAuth(context).user;
-        console.log(userLoggedIn);
 
         const findUser = await User.findOne({
           where: { username: to },
@@ -72,7 +72,7 @@ module.exports = {
         }
 
         const from = userLoggedIn.username;
-        console.log(from);
+
         const createdAt = new Date().toISOString();
 
         const newMessage = await Message.create({
@@ -84,7 +84,7 @@ module.exports = {
 
         await newMessage.save();
 
-        pubsub.publish("MESSAGE_CREATED", {
+        pubSub.publish("MESSAGE_CREATED", {
           messageCreated: {
             ...newMessage.dataValues,
           },
@@ -101,15 +101,21 @@ module.exports = {
   Subscription: {
     messageCreated: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator(["MESSAGE_CREATED"]),
-        ({ messageCreated }, variables, context) => {
-          const userLoggedIn = checkAuth(context).user;
+        (_, args, context) => {
+          try {
+            return pubSub.asyncIterator(["MESSAGE_CREATED"]);
+          } catch (error) {
+            throw new Error(error);
+          }
+        },
+        ({ messageCreated }, { username }) => {
           if (
-            messageCreated.from === userLoggedIn.username ||
-            messageCreated.to === userLoggedIn.username
+            messageCreated.from === username ||
+            messageCreated.to === username
           ) {
             return true;
           }
+          return false;
         }
       ),
     },
