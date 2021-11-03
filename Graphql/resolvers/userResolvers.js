@@ -56,7 +56,8 @@ module.exports = {
         );
 
         if (!valid) {
-          errors.push(validErrors);
+          errors.push({ message: Object.values(validErrors)[0] });
+
           return {
             errors,
           };
