@@ -1,11 +1,20 @@
 const { gql } = require("apollo-server-express");
 
 module.exports = gql`
+  type Error {
+    message: String!
+  }
+
   type User {
     id: Int!
     username: String!
     createdAt: String!
     token: String!
+  }
+
+  type UserResponse {
+    user: User
+    errors: [Error]
   }
 
   type Message {
@@ -14,6 +23,12 @@ module.exports = gql`
     to: String!
     from: String!
     createdAt: String!
+    errors: [Error]!
+  }
+
+  type MessageResponse {
+    message: Message
+    errors: [Error]
   }
 
   type Query {
@@ -24,16 +39,16 @@ module.exports = gql`
   }
 
   type Mutation {
-    createMessage(content: String!, to: String!): Message!
+    createMessage(content: String!, to: String!): MessageResponse!
     registerUser(
       username: String!
       password: String!
       confirmPassword: String!
-    ): User!
-    loginUser(username: String!, password: String!): User!
+    ): UserResponse!
+    loginUser(username: String!, password: String!): UserResponse!
   }
 
   type Subscription {
-    messageCreated(username:String!): Message!
+    messageCreated(username: String!): MessageResponse!
   }
 `;

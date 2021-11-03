@@ -54,18 +54,20 @@ module.exports = {
     async createMessage(_, { content, to }, context) {
       try {
         const userLoggedIn = checkAuth(context).user;
-
+     
         const findUser = await User.findOne({
           where: { username: to },
         });
 
         if (!findUser) {
+          
           throw new UserInputError("user not found", {
             noUser: "no such user",
           });
         }
 
         if (findUser.username === userLoggedIn.username) {
+         
           throw new UserInputError("not alowed", {
             notAllowed: "cannot send messages to self",
           });
@@ -91,7 +93,10 @@ module.exports = {
         });
 
         return {
-          ...newMessage.dataValues,
+          message: {
+            ...newMessage.dataValues,
+          },
+          errors,
         };
       } catch (error) {
         throw new Error(error);

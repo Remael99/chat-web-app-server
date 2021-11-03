@@ -48,14 +48,18 @@ module.exports = {
   Mutation: {
     async registerUser(_, { username, password, confirmPassword }) {
       try {
-        const { valid, errors } = validateRegisterInput(
+        const errors = [];
+        const { valid, errors: validErrors } = validateRegisterInput(
           username,
           password,
           confirmPassword
         );
 
         if (!valid) {
-          throw new UserInputError("errors", { errors });
+          errors.push(validErrors);
+          return {
+            errors,
+          };
         }
 
         const checkUserExist = await User.findOne({
@@ -63,8 +67,10 @@ module.exports = {
         });
 
         if (checkUserExist) {
-          errors.general = "this name is taken";
-          throw new UserInputError("username is taken", { errors });
+          errors.message = "this name is taken";
+          return {
+            errors,
+          };
         }
 
         password = await argon2.hash(password, 12);
@@ -84,8 +90,11 @@ module.exports = {
         const token = generateUserToken(res);
 
         return {
-          ...res.dataValues,
-          token,
+          user: {
+            ...loginUser.dataValues,
+            token,
+          },
+          errors,
         };
       } catch (error) {
         throw new Error(error);
@@ -93,32 +102,47 @@ module.exports = {
     },
     async loginUser(_, { username, password }) {
       try {
-        const { valid, errors } = validateLoginInput(username, password);
+        const errors = [];
+
+        const { valid, errors: validErrors } = validateLoginInput(
+          username,
+          password
+        );
 
         if (!valid) {
-          throw new UserInputError("Errors", { errors });
+          errors.push(validErrors);
+          return {
+            errors,
+          };
         }
 
         const loginUser = await User.findOne({ where: { username } });
 
         if (!loginUser) {
-          errors.general = "user not found";
-
-          throw new UserInputError("user not found", { errors });
+          errors.push({ message: "user not found" });
+          return {
+            errors,
+          };
         }
 
         const match = await argon2.verify(loginUser.password, password);
 
         if (!match) {
-          errors.general = "Check your username or password";
-          throw new UserInputError("Wrong credentials", { errors });
+          errors.push({ message: "Check your username or password" });
+
+          return {
+            errors,
+          };
         }
 
         const token = generateUserToken(loginUser);
 
         return {
-          ...loginUser.dataValues,
-          token,
+          user: {
+            ...loginUser.dataValues,
+            token,
+          },
+          errors,
         };
       } catch (error) {
         throw new Error(error);
