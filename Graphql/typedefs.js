@@ -23,7 +23,25 @@ module.exports = gql`
     to: String!
     from: String!
     createdAt: String!
-    errors: [Error]!
+  }
+
+  type Profile {
+    id: Int!
+    email: String!
+    status: String!
+    profilePic: String!
+    createdAt: String!
+  }
+
+  input ProfileInput {
+    email: String
+    status: String!
+    profilePic: String!
+  }
+
+  type ProfileResponse {
+    profile: Profile
+    errors: [Error]
   }
 
   type MessageResponse {
@@ -36,6 +54,7 @@ module.exports = gql`
     getUsers: [User]!
     getUser(username: String!): User!
     getUserMessages(usernameFrom: String!): [Message]!
+    getProfile(id: Int!): ProfileResponse!
   }
 
   type Mutation {
@@ -46,9 +65,10 @@ module.exports = gql`
       confirmPassword: String!
     ): UserResponse!
     loginUser(username: String!, password: String!): UserResponse!
+    createProfile(profileInput: ProfileInput): ProfileResponse!
   }
 
   type Subscription {
-    messageCreated(username: String!): MessageResponse!
+    messageCreated(username: String!): Message!
   }
 `;

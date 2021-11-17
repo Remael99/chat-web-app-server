@@ -53,21 +53,20 @@ module.exports = {
   Mutation: {
     async createMessage(_, { content, to }, context) {
       try {
+        const errors = [];
         const userLoggedIn = checkAuth(context).user;
-     
+
         const findUser = await User.findOne({
           where: { username: to },
         });
 
         if (!findUser) {
-          
           throw new UserInputError("user not found", {
             noUser: "no such user",
           });
         }
 
         if (findUser.username === userLoggedIn.username) {
-         
           throw new UserInputError("not alowed", {
             notAllowed: "cannot send messages to self",
           });

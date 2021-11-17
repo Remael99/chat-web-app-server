@@ -12,6 +12,8 @@ const { makeExecutableSchema } = require("@graphql-tools/schema");
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
   const httpServer = http.createServer(app);
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   const schema = makeExecutableSchema({ typeDefs, resolvers });
 
@@ -39,8 +41,8 @@ async function startApolloServer(typeDefs, resolvers) {
       subscribe,
       schema,
       async onConnect(connectionParams, webSocket, context) {
-        console.log(connectionParams);
-      },
+      //console.log(connectionParams)
+        },
     },
     {
       server: httpServer,

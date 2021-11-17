@@ -47,4 +47,4 @@ const validateEmail = (email) => {
   };
 };
 
-module.exports = { validateLoginInput, validateRegisterInput };
+module.exports = { validateLoginInput, validateRegisterInput, validateEmail };

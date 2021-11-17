@@ -4,10 +4,11 @@ const {
   validateRegisterInput,
   validateLoginInput,
 } = require("../../utils/validators.js");
-const { User } = require("../../models/index.js");
+const { User, Profile } = require("../../models/index.js");
 const SECRET = require("../../utils/config.js");
 const argon2 = require("argon2");
 const checkAuth = require("../../utils/check-auth.js");
+const { Op } = require("sequelize");
 
 const generateUserToken = (user) => {
   return jwt.sign(
@@ -24,8 +25,15 @@ module.exports = {
   Query: {
     async getUsers(_, args, context) {
       try {
-        checkAuth(context);
-        const users = await User.findAll();
+        const userLoggedin = checkAuth(context).user;
+
+        const users = await User.findAll({
+          where: {
+            username: {
+              [Op.ne]: userLoggedin.username,
+            },
+          },
+        });
 
         return users;
       } catch (error) {

@@ -6,9 +6,11 @@ const pubSub = new PubSub();
 
 module.exports = (context) => {
   let token;
+  
 
   if (context.req && context.req.headers.authorization) {
     const authHeader = context.req.headers.authorization;
+  
     token = authHeader.split("Bearer ")[1];
   } else {
     throw new Error("Authorization header must be provided");
